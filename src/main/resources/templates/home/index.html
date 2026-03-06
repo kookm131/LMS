@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>CodePilot - 메인</title>
+    <style>
+        :root {
+            --main: #03c75a;
+            --line: #e5e7eb;
+            --bg: #f9fafb;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Noto Sans KR", Arial, sans-serif;
+            background: var(--bg);
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* layout fragment에서 사용하는 스타일 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--main);
+            letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+
+        .user-menu a {
+            text-decoration: none;
+            color: #374151;
+            margin-left: 14px;
+            font-size: 14px;
+        }
+
+        .user-menu a:hover { color: var(--main); }
+
+        .main-menu {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .main-menu a {
+            text-decoration: none;
+            background: white;
+            border: 1px solid var(--line);
+            padding: 10px 16px;
+            border-radius: 999px;
+            color: #111827;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .main-menu a:hover {
+            border-color: var(--main);
+            color: var(--main);
+        }
+
+        .search-area {
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 28px;
+        }
+
+        .search-box {
+            display: flex;
+            border: 2px solid var(--main);
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            padding: 14px 18px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-box button {
+            border: none;
+            background: var(--main);
+            color: white;
+            padding: 0 22px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .section-title {
+            font-size: 22px;
+            margin: 0 0 14px;
+        }
+
+        /* 추천 강의 슬라이더 */
+        .slider-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .arrow-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: white;
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .arrow-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .slider-view {
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .slider-track {
+            display: flex;
+            gap: 14px;
+            transition: transform 0.25s ease;
+            will-change: transform;
+        }
+
+        .course-card {
+            min-width: calc((100% - 42px) / 4); /* 한 화면에 4장 */
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 12px;
+            color: var(--main);
+            border: 1px solid #b9f5d0;
+            background: #ecfdf3;
+            border-radius: 999px;
+            padding: 3px 8px;
+            margin-bottom: 8px;
+        }
+
+        .course-title {
+            margin: 0 0 6px;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .course-desc {
+            margin: 0 0 10px;
+            color: #4b5563;
+            font-size: 13px;
+            min-height: 36px;
+        }
+
+        .meta {
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .board-wrap {
+            margin-top: 26px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .board-box {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .board-title {
+            font-size: 18px;
+            margin: 0 0 10px;
+        }
+
+        .board-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .board-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+        }
+
+        .board-list li:last-child { border-bottom: none; }
+
+        .board-date {
+            color: #6b7280;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .comment-count {
+            color: #811010;
+            font-weight: 400;
+            margin-right: 6px;
+        }
+
+        .review-meta {
+            color: #6b7280;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+            .course-card { min-width: calc((100% - 14px) / 2); }
+            .board-wrap { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/layout :: topLayout(${isAuthenticated})}"></div>
+
+    <section>
+        <h2 class="section-title">추천 강의</h2>
+
+        <div class="slider-wrap">
+            <button id="prevBtn" class="arrow-btn" type="button" aria-label="이전">‹</button>
+
+            <div class="slider-view">
+                <div id="sliderTrack" class="slider-track">
+                    <article class="course-card" th:each="course, stat : ${recommendedCourses}">
+                        <span class="badge" th:text="${stat.index < 3 ? '주목' : '최신'}">주목</span>
+                        <h3 class="course-title"><a th:href="@{/courses/{id}(id=${course.id})}" th:text="${course.title}" style="text-decoration:none; color:inherit;">강의 제목</a></h3>
+                        <p class="course-desc" th:text="${course.description}">강의 설명</p>
+                        <div class="meta">
+                            <span th:text="${course.instructorName}">강사명</span>
+                            <span th:text="${#temporals.format(course.createdAt, 'MM.dd')}">02.25</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <button id="nextBtn" class="arrow-btn" type="button" aria-label="다음">›</button>
+        </div>
+    </section>
+
+    <section class="board-wrap">
+        <div class="board-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 class="board-title" style="margin:0;">공지사항</h3>
+                <a th:href="@{/community/notices}" style="text-decoration:none; font-size:20px; font-weight:700; color:#03c75a; line-height:1;">+</a>
+            </div>
+            <ul class="board-list">
+                <li th:each="notice : ${pinnedNotices}">
+                    <a th:href="@{/community/notices/{id}(id=${notice.id})}" style="text-decoration:none; color:inherit; font-weight:700;" th:text="'[고정] ' + ${notice.title}">[고정] 공지 제목</a>
+                    <span class="board-date"><span class="comment-count" th:text="${notice.commentCount}">0</span><span th:text="${#temporals.format(notice.createdAt, 'MM.dd')}">02.25</span></span>
+                </li>
+                <li th:each="notice : ${notices}">
+                    <a th:href="@{/community/notices/{id}(id=${notice.id})}" th:text="${notice.title}" style="text-decoration:none; color:inherit;">공지 제목</a>
+                    <span class="board-date"><span class="comment-count" th:text="${notice.commentCount}">0</span><span th:text="${#temporals.format(notice.createdAt, 'MM.dd')}">02.25</span></span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="board-box">
+            <h3 class="board-title">수강평</h3>
+            <ul class="board-list">
+                <li th:each="review : ${reviews}">
+                    <a th:href="@{/courses/{id}(id=${review.courseId})}" th:text="${review.content}" style="text-decoration:none; color:inherit;">수강평 내용</a>
+                    <span class="review-meta" th:text="${review.writerName + ' · ' + review.rating + '점'}">홍길동 · 5점</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+</div>
+
+<script>
+    // 추천 강의 좌우 슬라이더
+    const track = document.getElementById('sliderTrack');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const cards = track ? Array.from(track.children) : [];
+    let index = 0;
+
+    function visibleCount() {
+        return window.innerWidth <= 900 ? 2 : 4;
+    }
+
+    function stepWidth() {
+        if (cards.length === 0) return 0;
+        const cardWidth = cards[0].getBoundingClientRect().width;
+        return cardWidth + 14; // gap 값
+    }
+
+    function updateSlider() {
+        const maxIndex = Math.max(0, cards.length - visibleCount());
+        index = Math.max(0, Math.min(index, maxIndex));
+        track.style.transform = `translateX(${-index * stepWidth()}px)`;
+
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index >= maxIndex;
+    }
+
+    if (track) {
+        prevBtn.addEventListener('click', () => {
+            index -= 1;
+            updateSlider();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            index += 1;
+            updateSlider();
+        });
+
+        window.addEventListener('resize', updateSlider);
+        updateSlider();
+    }
+</script>
+</body>
+</html>

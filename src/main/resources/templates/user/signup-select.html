@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>회원유형 선택 - CodePilot</title>
+    <style>
+        :root { --main:#03c75a; --line:#e5e7eb; --bg:#f9fafb; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:"Noto Sans KR", Arial, sans-serif; background:var(--bg); }
+        .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .card { width:100%; max-width:720px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; }
+        .logo { display:block; text-align:center; text-decoration:none; color:var(--main); font-size:32px; font-weight:900; margin-bottom:16px; }
+        .title { text-align:center; margin:0 0 18px; }
+        .type-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .type-link { text-decoration:none; color:#111827; border:1px solid var(--line); border-radius:14px; padding:24px; text-align:center; transition:.15s; }
+        .bottom-actions { margin-top:14px; }
+        .back-home-btn { display:block; width:100%; text-align:center; text-decoration:none; border:1px solid var(--line); background:#fff; color:#374151; border-radius:10px; padding:12px; font-weight:700; font-size:14px; }
+        .type-link:hover { border-color:var(--main); transform:translateY(-2px); }
+        .icon { font-size:42px; margin-bottom:8px; display:block; }
+        .name { font-size:18px; font-weight:700; display:block; margin-bottom:4px; }
+        .desc { color:#6b7280; font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <a class="logo" th:href="@{/}">CodePilot</a>
+        <h1 class="title">회원유형을 선택해주세요</h1>
+
+        <div class="type-grid">
+            <a class="type-link" th:href="@{/signup/form(type='BUSINESS')}">
+                <span class="icon">🏢</span>
+                <span class="name">사업자 회원가입</span>
+                <span class="desc">기관/업체용 계정</span>
+            </a>
+
+            <a class="type-link" th:href="@{/signup/form(type='NORMAL')}">
+                <span class="icon">🧑</span>
+                <span class="name">일반 회원가입</span>
+                <span class="desc">개인 학습자 계정</span>
+            </a>
+        </div>
+
+        <div class="bottom-actions">
+            <a class="back-home-btn" th:href="@{/}">돌아가기</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

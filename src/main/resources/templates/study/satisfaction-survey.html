@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>만족도평가</title>
+    <style>
+        :root { --main:#03c75a; --line:#e5e7eb; --bg:#f9fafb; }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Noto Sans KR", Arial, sans-serif; background:var(--bg); color:#111827; }
+        .container { max-width:980px; margin:0 auto; padding:20px; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .logo { font-size:28px; font-weight:800; color:var(--main); text-decoration:none; }
+        .user-menu a { text-decoration:none; color:#374151; margin-left:14px; font-size:14px; }
+        .main-menu { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+        .main-menu a { text-decoration:none; background:white; border:1px solid var(--line); padding:10px 16px; border-radius:999px; color:#111827; font-weight:600; font-size:14px; }
+        .search-area { background:white; border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:20px; }
+        .search-box { display:flex; border:2px solid var(--main); border-radius:999px; overflow:hidden; }
+        .search-box input { flex:1; border:none; padding:14px 18px; font-size:16px; outline:none; }
+        .search-box button { border:none; background:var(--main); color:white; padding:0 22px; font-weight:700; cursor:pointer; }
+        .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; }
+        h1 { margin:0 0 6px; font-size:24px; }
+        .meta { color:#6b7280; font-size:13px; margin-bottom:14px; }
+        .q-title { margin:0 0 10px; font-size:20px; }
+        .step-no { font-size:12px; color:#6b7280; margin-bottom:8px; }
+        .step { display:none; }
+        .step.active { display:block; }
+        .actions { margin-top:18px; display:flex; justify-content:space-between; gap:8px; }
+        .btn { border:1px solid #d1d5db; background:#fff; color:#374151; border-radius:8px; padding:10px 14px; font-weight:700; font-size:13px; cursor:pointer; }
+        .btn-primary { border-color:var(--main); background:var(--main); color:#fff; }
+        textarea { width:100%; box-sizing:border-box; box-sizing:border-box; min-height:130px; margin:10px 0; border:1px solid #d1d5db; border-radius:10px; padding:10px; font-size:14px; }
+        .options { display:grid; gap:8px; }
+        .options label { border:1px solid #e5e7eb; border-radius:10px; padding:10px; cursor:pointer; }
+        .star-control { position:relative; width:180px; font-size:34px; line-height:1; cursor:pointer; user-select:none; margin-top:12px; }
+        .star-bg { color:#d1d5db; }
+        .star-fill { position:absolute; left:0; top:0; overflow:hidden; white-space:nowrap; color:#f59e0b; width:100%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/layout :: topLayout(${isAuthenticated})}"></div>
+
+    <form th:action="@{${surveyFormAction}}" method="post" class="card" id="surveyForm">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <h1 th:text="${editMode} ? '만족도평가 수정' : '만족도평가'">만족도평가</h1>
+        <div class="meta" th:text="${course.title}">강의명</div>
+        <input type="hidden" id="initQ1" th:value="${survey != null ? survey.q1 : ''}"/>
+        <input type="hidden" id="initQ2" th:value="${survey != null ? survey.q2 : ''}"/>
+        <input type="hidden" id="initQ3" th:value="${survey != null ? survey.q3 : ''}"/>
+        <input type="hidden" id="initQ4" th:value="${survey != null ? survey.q4 : ''}"/>
+        <input type="hidden" id="initQ5" th:value="${survey != null ? survey.q5 : ''}"/>
+        <input type="hidden" id="initQ6" th:value="${survey != null ? survey.q6 : ''}"/>
+        <input type="hidden" id="initQ7" th:value="${survey != null ? survey.q7 : ''}"/>
+        <input type="hidden" id="initQ8" th:value="${survey != null ? survey.q8 : ''}"/>
+        <input type="hidden" id="initQ9" th:value="${survey != null ? survey.q9 : ''}"/>
+        <input type="hidden" id="initQ10" th:value="${survey != null ? survey.q10 : ''}"/>
+
+        <section class="step active" data-step="1"><div class="step-no">1 / 11</div><h2 class="q-title">수업 목표와 내용이 일관되고 이해하기 쉬웠다.</h2><div class="options" data-required="q1"><label><input type="radio" name="q1" value="5"> 매우좋음</label><label><input type="radio" name="q1" value="4"> 좋음</label><label><input type="radio" name="q1" value="3"> 보통</label><label><input type="radio" name="q1" value="2"> 별로</label><label><input type="radio" name="q1" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="2"><div class="step-no">2 / 11</div><h2 class="q-title">설명 속도와 난이도가 적절했다.</h2><div class="options" data-required="q2"><label><input type="radio" name="q2" value="5"> 매우좋음</label><label><input type="radio" name="q2" value="4"> 좋음</label><label><input type="radio" name="q2" value="3"> 보통</label><label><input type="radio" name="q2" value="2"> 별로</label><label><input type="radio" name="q2" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="3"><div class="step-no">3 / 11</div><h2 class="q-title">예시/실습이 학습 이해에 도움이 되었다.</h2><div class="options" data-required="q3"><label><input type="radio" name="q3" value="5"> 매우좋음</label><label><input type="radio" name="q3" value="4"> 좋음</label><label><input type="radio" name="q3" value="3"> 보통</label><label><input type="radio" name="q3" value="2"> 별로</label><label><input type="radio" name="q3" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="4"><div class="step-no">4 / 11</div><h2 class="q-title">자료(슬라이드/코드/과제)가 충실하고 유용했다.</h2><div class="options" data-required="q4"><label><input type="radio" name="q4" value="5"> 매우좋음</label><label><input type="radio" name="q4" value="4"> 좋음</label><label><input type="radio" name="q4" value="3"> 보통</label><label><input type="radio" name="q4" value="2"> 별로</label><label><input type="radio" name="q4" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="5"><div class="step-no">5 / 11</div><h2 class="q-title">수업 구성(도입-전개-정리)이 체계적이었다.</h2><div class="options" data-required="q5"><label><input type="radio" name="q5" value="5"> 매우좋음</label><label><input type="radio" name="q5" value="4"> 좋음</label><label><input type="radio" name="q5" value="3"> 보통</label><label><input type="radio" name="q5" value="2"> 별로</label><label><input type="radio" name="q5" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="6"><div class="step-no">6 / 11</div><h2 class="q-title">질문에 대한 피드백이 충분하고 명확했다.</h2><div class="options" data-required="q6"><label><input type="radio" name="q6" value="5"> 매우좋음</label><label><input type="radio" name="q6" value="4"> 좋음</label><label><input type="radio" name="q6" value="3"> 보통</label><label><input type="radio" name="q6" value="2"> 별로</label><label><input type="radio" name="q6" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="7"><div class="step-no">7 / 11</div><h2 class="q-title">강사의 전달력과 발음/톤이 좋았다.</h2><div class="options" data-required="q7"><label><input type="radio" name="q7" value="5"> 매우좋음</label><label><input type="radio" name="q7" value="4"> 좋음</label><label><input type="radio" name="q7" value="3"> 보통</label><label><input type="radio" name="q7" value="2"> 별로</label><label><input type="radio" name="q7" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="8"><div class="step-no">8 / 11</div><h2 class="q-title">수업 준비(자료/환경/진행)가 철저했다.</h2><div class="options" data-required="q8"><label><input type="radio" name="q8" value="5"> 매우좋음</label><label><input type="radio" name="q8" value="4"> 좋음</label><label><input type="radio" name="q8" value="3"> 보통</label><label><input type="radio" name="q8" value="2"> 별로</label><label><input type="radio" name="q8" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="9"><div class="step-no">9 / 11</div><h2 class="q-title">수업 길이와 분량이 적절했다.</h2><div class="options" data-required="q9"><label><input type="radio" name="q9" value="5"> 매우좋음</label><label><input type="radio" name="q9" value="4"> 좋음</label><label><input type="radio" name="q9" value="3"> 보통</label><label><input type="radio" name="q9" value="2"> 별로</label><label><input type="radio" name="q9" value="1"> 매우별로</label></div></section>
+        <section class="step" data-step="10"><div class="step-no">10 / 11</div><h2 class="q-title">전체적으로 이 수업을 다른 사람에게 추천하고 싶다.</h2><div class="options" data-required="q10"><label><input type="radio" name="q10" value="5"> 매우좋음</label><label><input type="radio" name="q10" value="4"> 좋음</label><label><input type="radio" name="q10" value="3"> 보통</label><label><input type="radio" name="q10" value="2"> 별로</label><label><input type="radio" name="q10" value="1"> 매우별로</label></div></section>
+
+        <section class="step" data-step="11">
+            <div class="step-no">11 / 11</div>
+            <h2 class="q-title">하고 싶은 말</h2>
+            <textarea name="comment" placeholder="의견이 있으면 자유롭게 작성해주세요 (공란 가능)" th:text="${survey != null ? survey.comment : ''}"></textarea>
+            <h2 class="q-title" style="margin-top:14px;">총 만족도 (0.5점 단위)</h2>
+            <input type="hidden" id="overallInput" name="overall" th:value="${survey != null ? survey.overallRating : 5.0}"/>
+            <div><strong><span id="overallValue">5.0</span>점</strong></div>
+            <div id="starControl" class="star-control">
+                <div class="star-bg">★★★★★</div>
+                <div id="starFill" class="star-fill">★★★★★</div>
+            </div>
+        </section>
+
+        <div class="actions">
+            <button type="button" class="btn" id="prevBtn">이전</button>
+            <button type="button" class="btn btn-primary" id="nextBtn">다음</button>
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">완료하기</button>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+    const steps = [...document.querySelectorAll('.step')];
+    let current = 0;
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function showStep(idx){
+        steps.forEach((s,i)=>s.classList.toggle('active', i===idx));
+        prevBtn.style.visibility = idx === 0 ? 'hidden' : 'visible';
+        nextBtn.style.display = idx === steps.length-1 ? 'none' : 'inline-block';
+        submitBtn.style.display = idx === steps.length-1 ? 'inline-block' : 'none';
+    }
+    function validateCurrent(){
+        const req = steps[current].querySelector('.options')?.getAttribute('data-required');
+        if (!req) return true;
+        return !!document.querySelector(`input[name="${req}"]:checked`);
+    }
+    prevBtn.addEventListener('click', ()=>{ if (current>0){ current--; showStep(current); } });
+    nextBtn.addEventListener('click', ()=>{ if (!validateCurrent()) { alert('응답을 선택해 주세요.'); return; } if (current < steps.length-1){ current++; showStep(current); } });
+
+    const overallInput = document.getElementById('overallInput');
+    const overallValue = document.getElementById('overallValue');
+    const starFill = document.getElementById('starFill');
+    const starControl = document.getElementById('starControl');
+    const clampHalf = (v) => Math.max(0, Math.min(5, Math.round(v * 2) / 2));
+    const render = (v) => { const n = clampHalf(v); overallInput.value = n.toFixed(1); overallValue.textContent = n.toFixed(1); starFill.style.width = (n/5*100) + '%'; };
+    const fromPointer = (x) => { const rect = starControl.getBoundingClientRect(); return clampHalf(((x - rect.left) / rect.width) * 5); };
+    let dragging = false;
+    starControl.addEventListener('mousedown', (e)=>{ dragging=true; render(fromPointer(e.clientX)); });
+    window.addEventListener('mousemove', (e)=>{ if(dragging) render(fromPointer(e.clientX)); });
+    window.addEventListener('mouseup', ()=> dragging=false);
+    starControl.addEventListener('click', (e)=> render(fromPointer(e.clientX)));
+    starControl.addEventListener('wheel', (e)=>{ e.preventDefault(); const cur=parseFloat(overallInput.value||'5'); render(cur + (e.deltaY<0?0.5:-0.5)); }, {passive:false});
+
+
+    const initial = {};
+    for (let i=1;i<=10;i++) {
+        const v = document.getElementById('initQ'+i)?.value;
+        if (v !== undefined && v !== null && v !== '') initial['q'+i] = parseFloat(v);
+    }
+    Object.entries(initial).forEach(([k,v]) => {
+        const el = document.querySelector(`input[name="${k}"][value="${Math.round(v)}"]`);
+        if (el) el.checked = true;
+    });
+
+    render(parseFloat(overallInput.value || "5")); showStep(0);
+</script>
+</body>
+</html>

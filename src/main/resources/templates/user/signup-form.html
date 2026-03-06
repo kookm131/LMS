@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>회원가입 - CodePilot</title>
+    <style>
+        :root { --main:#03c75a; --line:#e5e7eb; --bg:#f9fafb; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:"Noto Sans KR", Arial, sans-serif; background:var(--bg); }
+        .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+        .card { width:100%; max-width:520px; background:#fff; border:1px solid var(--line); border-radius:16px; padding:24px; }
+        .logo { display:block; text-align:center; text-decoration:none; color:var(--main); font-size:30px; font-weight:900; margin-bottom:12px; }
+        .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+        .title { margin:0; font-size:20px; }
+        .back { font-size:12px; color:#6b7280; text-decoration:none; }
+        .type-chip { display:inline-block; margin-bottom:10px; background:#ecfdf3; color:#047857; border:1px solid #b9f5d0; border-radius:999px; padding:4px 10px; font-size:12px; }
+        .form-row { margin-bottom:10px; }
+        label { display:block; font-size:13px; margin-bottom:6px; }
+        input { width:100%; border:1px solid var(--line); border-radius:10px; padding:10px; }
+        .gender-row { display:flex; gap:14px; padding:8px 0; }
+        .error { color:#dc2626; font-size:12px; margin-top:4px; }
+        .submit-btn { width:100%; border:none; border-radius:10px; background:var(--main); color:#fff; font-weight:700; padding:12px; cursor:pointer; margin-top:8px; }
+        .bottom-actions { margin-top:12px; }
+        .back-home-btn { display:block; width:100%; text-align:center; text-decoration:none; border:1px solid var(--line); background:#fff; color:#374151; border-radius:10px; padding:12px; font-weight:700; font-size:14px; }
+        .help { font-size:12px; color:#6b7280; margin-bottom:8px; }
+        input:disabled { background:#f3f4f6; color:#9ca3af; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="card">
+        <a class="logo" th:href="@{/}">CodePilot</a>
+
+        <div class="top-row">
+            <h1 class="title">회원가입</h1>
+            <a class="back" th:href="@{/signup}">유형 다시 선택</a>
+        </div>
+
+        <span class="type-chip" th:text="${form.userType == 'BUSINESS' ? '사업자 회원가입' : '일반 회원가입'}">일반 회원가입</span>
+
+        <form th:action="@{/signup}" th:object="${form}" method="post" id="signupForm" novalidate>
+            <input type="hidden" th:field="*{userType}"/>
+
+            <div class="help">모든 항목은 필수입니다.</div>
+            <div class="error" th:errors="*{userType}"></div>
+
+            <div th:if="${form.userType == 'BUSINESS'}">
+                <div class="form-row">
+                    <label>아이디</label>
+                    <input th:field="*{username}" type="text" data-label="아이디" required>
+                    <div class="error" th:errors="*{username}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>비밀번호</label>
+                    <input th:field="*{password}" type="password" data-label="비밀번호" required>
+                    <div class="error" th:errors="*{password}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>비밀번호 확인</label>
+                    <input th:field="*{passwordConfirm}" type="password" data-label="비밀번호 확인" required>
+                    <div class="error" th:errors="*{passwordConfirm}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>대표자 이메일</label>
+                    <input th:field="*{email}" type="email" data-label="대표자 이메일" required>
+                    <div class="error" th:errors="*{email}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>대표자 이름</label>
+                    <input th:field="*{name}" type="text" data-label="대표자 이름" required>
+                    <div class="error" th:errors="*{name}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>상호명</label>
+                    <input id="businessName" th:field="*{businessName}" type="text" data-label="상호명" required>
+                    <div class="error" th:errors="*{businessName}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>사업자등록번호</label>
+                    <input type="text" value="미구현 항목" disabled>
+                </div>
+
+                <div class="form-row">
+                    <label>대표자 전화번호</label>
+                    <input th:field="*{phone}" type="text" placeholder="010-1234-5678" data-label="대표자 전화번호" required>
+                    <div class="error" th:errors="*{phone}"></div>
+                </div>
+
+                <!-- 현재 백엔드 검증 호환용 기본값 -->
+                <input type="hidden" th:field="*{birthDate}" value="1990-01-01"/>
+                <input type="hidden" th:field="*{gender}" value="MALE"/>
+            </div>
+
+            <div th:if="${form.userType != 'BUSINESS'}">
+                <div class="form-row">
+                    <label>아이디</label>
+                    <input th:field="*{username}" type="text" data-label="아이디" required>
+                    <div class="error" th:errors="*{username}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>비밀번호</label>
+                    <input th:field="*{password}" type="password" data-label="비밀번호" required>
+                    <div class="error" th:errors="*{password}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>비밀번호 확인</label>
+                    <input th:field="*{passwordConfirm}" type="password" data-label="비밀번호 확인" required>
+                    <div class="error" th:errors="*{passwordConfirm}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>이메일</label>
+                    <input th:field="*{email}" type="email" data-label="이메일" required>
+                    <div class="error" th:errors="*{email}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>이름</label>
+                    <input th:field="*{name}" type="text" data-label="이름" required>
+                    <div class="error" th:errors="*{name}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>생년월일</label>
+                    <input th:field="*{birthDate}" type="date" data-label="생년월일" required>
+                    <div class="error" th:errors="*{birthDate}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>성별</label>
+                    <div class="gender-row">
+                        <label><input type="radio" th:field="*{gender}" value="MALE" data-label="성별" required> 남자</label>
+                        <label><input type="radio" th:field="*{gender}" value="FEMALE" data-label="성별" required> 여자</label>
+                    </div>
+                    <div class="error" th:errors="*{gender}"></div>
+                </div>
+
+                <div class="form-row">
+                    <label>전화번호</label>
+                    <input th:field="*{phone}" type="text" placeholder="010-1234-5678" data-label="전화번호" required>
+                    <div class="error" th:errors="*{phone}"></div>
+                </div>
+            </div>
+
+            <button class="submit-btn" type="submit">가입하기</button>
+
+            <div class="bottom-actions">
+                <a class="back-home-btn" th:href="@{/}">돌아가기</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const form = document.getElementById('signupForm');
+    form.querySelectorAll('[required]').forEach((el) => {
+        el.addEventListener('invalid', function () {
+            const label = this.dataset.label || '항목';
+            this.setCustomValidity(label + '는 필수항목입니다');
+        });
+        el.addEventListener('input', function () { this.setCustomValidity(''); });
+        el.addEventListener('change', function () { this.setCustomValidity(''); });
+    });
+
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>수강신청내역</title>
+    <style>
+        :root { --main:#03c75a; --line:#e5e7eb; --bg:#f9fafb; }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Noto Sans KR", Arial, sans-serif; background:var(--bg); color:#111827; }
+        .container { max-width:1100px; margin:0 auto; padding:20px; }
+
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .logo { font-size:28px; font-weight:800; color:var(--main); text-decoration:none; }
+        .user-menu a { text-decoration:none; color:#374151; margin-left:14px; font-size:14px; }
+        .main-menu { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+        .main-menu a { text-decoration:none; background:white; border:1px solid var(--line); padding:10px 16px; border-radius:999px; color:#111827; font-weight:600; font-size:14px; }
+        .search-area { background:white; border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:20px; }
+        .search-box { display:flex; border:2px solid var(--main); border-radius:999px; overflow:hidden; }
+        .search-box input { flex:1; border:none; padding:14px 18px; font-size:16px; outline:none; }
+        .search-box button { border:none; background:var(--main); color:white; padding:0 22px; font-weight:700; cursor:pointer; }
+
+        .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; }
+        h1 { margin:0 0 12px; font-size:24px; }
+
+        .top-categories { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+        .top-categories a {
+            text-decoration:none; border:1px solid var(--line); background:#fff; color:#374151;
+            padding:8px 12px; border-radius:999px; font-size:13px;
+        }
+        .top-categories a.active { background:#ecfdf3; color:#047857; border-color:#b9f5d0; font-weight:700; }
+
+        .status-categories { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+        .status-categories a {
+            text-decoration:none; border:1px solid var(--line); background:#fff; color:#374151;
+            padding:8px 12px; border-radius:999px; font-size:13px; font-weight:700;
+        }
+        .status-categories a.complete.active { background:#dbeafe; color:#1d4ed8; border-color:#93c5fd; }
+        .status-categories a.incomplete.active { background:#fee2e2; color:#dc2626; border-color:#fca5a5; }
+
+        .item { border-bottom:1px solid #f1f5f9; padding:12px 4px; display:flex; justify-content:space-between; gap:12px; }
+        .item:last-child { border-bottom:none; }
+        .title { margin:0 0 4px; font-weight:700; font-size:16px; }
+        .meta { font-size:13px; color:#6b7280; }
+        .progress-low { color:#2563eb; font-weight:700; }
+        .progress-high { color:#16a34a; font-weight:700; }
+        .right { display:flex; flex-direction:column; justify-content:flex-start; align-items:flex-end; min-width:190px; }
+
+        .pagination { margin-top:14px; display:flex; justify-content:center; gap:6px; flex-wrap:wrap; }
+        .pagination a, .pagination span {
+            min-width:34px; text-align:center; padding:8px 10px; border:1px solid var(--line);
+            border-radius:8px; text-decoration:none; color:#374151; background:#fff; font-size:13px;
+        }
+        .pagination .active { background:var(--main); color:#fff; border-color:var(--main); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/layout :: topLayout(${isAuthenticated})}"></div>
+
+    <section class="card">
+        <h1>수강신청내역</h1>
+
+
+        <div class="status-categories">
+            <a class="incomplete"
+               th:href="@{/study/enrollments(completion='incomplete', category='')}"
+               th:classappend="${completion == 'incomplete'} ? 'active'">미수료</a>
+            <a class="complete"
+               th:href="@{/study/enrollments(completion='complete', category='')}"
+               th:classappend="${completion == 'complete'} ? 'active'">수료</a>
+        </div>
+
+        <div class="top-categories">
+            <a th:href="@{/study/enrollments(completion=${completion})}" th:classappend="${selectedCategory == ''} ? 'active'">전체</a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/study/enrollments(category=${cat}, completion=${completion})}"
+               th:text="${cat}"
+               th:classappend="${selectedCategory == cat} ? 'active'">카테고리</a>
+        </div>
+
+        <div class="item" th:each="e : ${enrollments}">
+            <div>
+                <p class="title"><a th:href="@{/study/courses/{id}(id=${e.courseId})}" th:text="${e.title}" style="text-decoration:none; color:inherit;">강의명</a></p>
+                <div class="meta" th:text="${e.category} + ' · ' + ${e.instructorName}">카테고리 · 강사</div>
+            </div>
+            <div class="right">
+                <div class="meta"><span th:class="${e.progressRate < 50.0} ? 'progress-low' : 'progress-high'" th:text="${#numbers.formatDecimal(e.progressRate, 1, 1)} + '%'">0.0%</span> <span th:text="${#temporals.format(e.enrolledAt, 'yyyy.MM.dd')}">2026.02.26</span></div>
+            </div>
+        </div>
+
+        <div class="item" th:if="${#lists.isEmpty(enrollments)}">
+            <div class="meta">수강신청 내역이 없습니다.</div>
+        </div>
+
+        <div class="pagination">
+            <a th:if="${hasPrevGroup}" th:href="@{/study/enrollments(page=${prevGroupPage}, category=${selectedCategory}, completion=${completion})}">←</a>
+
+            <th:block th:each="p : ${#numbers.sequence(startPage, endPage)}">
+                <a th:if="${p != currentPage}" th:href="@{/study/enrollments(page=${p}, category=${selectedCategory}, completion=${completion})}" th:text="${p}">1</a>
+                <span th:if="${p == currentPage}" class="active" th:text="${p}">1</span>
+            </th:block>
+
+            <a th:if="${hasNextGroup}" th:href="@{/study/enrollments(page=${nextGroupPage}, category=${selectedCategory}, completion=${completion})}">→</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

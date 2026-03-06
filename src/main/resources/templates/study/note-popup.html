@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>학습노트</title>
+    <style>
+        :root { --main:#03c75a; --line:#e5e7eb; --bg:#f8fafc; }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Noto Sans KR", Arial, sans-serif; background:var(--bg); color:#111827; }
+        .wrap { max-width:900px; margin:0 auto; padding:16px; }
+        .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; }
+        h1 { margin:0 0 8px; font-size:20px; }
+        .meta { color:#6b7280; font-size:13px; }
+        .helper { margin:10px 0; display:flex; gap:8px; flex-wrap:wrap; }
+        .btn { border:1px solid #03c75a; background:#03c75a; color:#fff; border-radius:8px; padding:7px 12px; font-size:12px; cursor:pointer; text-decoration:none; }
+        .btn.sub { border-color:#d1d5db; background:#fff; color:#374151; }
+        .editor {
+            width:100%; min-height:360px; resize:vertical;
+            border:1px solid #d1d5db; border-radius:10px; padding:12px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            background:#f8fafc;
+        }
+        .preview { margin-top:10px; background:#f8fafc; border:1px dashed #d1d5db; border-radius:10px; padding:10px; }
+        .actions { margin-top:10px; display:flex; justify-content:space-between; gap:8px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <section class="card">
+        <h1 th:text="'학습노트 - ' + ${lecture.orderNo} + '. ' + ${lecture.title}">학습노트</h1>
+        <div class="meta" th:text="${course.title}">강의명</div>
+        <div class="meta" th:if="${saved}" style="color:#059669; margin-top:6px;">저장 완료</div>
+
+        <form th:action="@{/study/courses/{courseId}/notes/{lectureId}(courseId=${course.courseId}, lectureId=${lecture.lectureId})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="helper">
+                <button class="btn sub" type="button" id="insert-time-btn">시간 링크 추가(XX:XX)</button>
+                <button class="btn sub" type="button" id="insert-code-btn">코드 스니펫 추가</button>
+                <span class="meta">메모장 형식</span>
+            </div>
+
+            <textarea class="editor" id="noteContent" name="noteContent" th:text="${noteContent}" placeholder="학습노트를 작성하세요"></textarea>
+
+            <div class="preview">
+                <div class="meta">시간 링크 미리보기 (미구현: 링크 존재만 표시)</div>
+                <div id="timeLinksPreview" class="meta" style="margin-top:4px;">감지된 시간 링크가 없습니다.</div>
+            </div>
+
+            <div class="preview">
+                <div class="meta">코드 스니펫 미리보기</div>
+                <div id="snippetPreview" class="meta" style="margin-top:4px;">코드 스니펫이 없습니다.</div>
+            </div>
+
+            <div class="actions">
+                <button class="btn" type="submit">저장</button>
+                <button class="btn sub" type="button" onclick="window.close()">닫기</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<script>
+    const noteContent = document.getElementById('noteContent');
+    const insertTimeBtn = document.getElementById('insert-time-btn');
+    const insertCodeBtn = document.getElementById('insert-code-btn');
+    const timeLinksPreview = document.getElementById('timeLinksPreview');
+    const snippetPreview = document.getElementById('snippetPreview');
+
+    const insertAtCursor = (el, text) => {
+        if (!el) return;
+        const start = el.selectionStart ?? el.value.length;
+        const end = el.selectionEnd ?? el.value.length;
+        const before = el.value.substring(0, start);
+        const after = el.value.substring(end);
+        el.value = before + text + after;
+        const pos = start + text.length;
+        el.setSelectionRange(pos, pos);
+        el.focus();
+        renderHelpers();
+    };
+
+    const renderHelpers = () => {
+        if (!noteContent) return;
+        const value = noteContent.value || '';
+        const times = [...new Set((value.match(/\b\d{2}:\d{2}\b/g) || []))];
+        timeLinksPreview.innerHTML = times.length
+            ? times.map(t => `<div>🔗 ${t} 이동 링크 존재</div>`).join('')
+            : '감지된 시간 링크가 없습니다.';
+
+        const snippets = value.match(/```[\s\S]*?```/g) || [];
+        snippetPreview.innerHTML = snippets.length
+            ? snippets.map((snippet, idx) => {
+                const lineCount = Math.max(0, snippet.split('\n').length - 2);
+                return `<div>코드 스니펫 ${idx + 1}개 감지 (${lineCount}줄)</div>`;
+            }).join('')
+            : '코드 스니펫이 없습니다.';
+    };
+
+    insertTimeBtn.addEventListener('click', () => insertAtCursor(noteContent, '00:00 '));
+    insertCodeBtn.addEventListener('click', () => insertAtCursor(noteContent, '\n```java\n// code here\n```\n'));
+    noteContent.addEventListener('input', renderHelpers);
+    renderHelpers();
+</script>
+</body>
+</html>

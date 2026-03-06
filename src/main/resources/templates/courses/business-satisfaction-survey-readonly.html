@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>만족도조사 상세</title>
+<style>
+:root { --main:#03c75a; --line:#e5e7eb; --bg:#f9fafb; }
+*{box-sizing:border-box;} body{margin:0;font-family:"Noto Sans KR", Arial, sans-serif;background:var(--bg);color:#111827;}
+.container{max-width:980px;margin:0 auto;padding:20px;} .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; } .logo { font-size:28px; font-weight:800; color:var(--main); text-decoration:none; } .user-menu a { text-decoration:none; color:#374151; margin-left:14px; font-size:14px; } .main-menu { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; } .main-menu a { text-decoration:none; background:white; border:1px solid var(--line); padding:10px 16px; border-radius:999px; color:#111827; font-weight:600; font-size:14px; } .search-area { background:white; border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:20px; } .search-box { display:flex; border:2px solid var(--main); border-radius:999px; overflow:hidden; } .search-box input { flex:1; border:none; padding:14px 18px; font-size:16px; outline:none; } .search-box button { border:none; background:var(--main); color:white; padding:0 22px; font-weight:700; cursor:pointer; } .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;}
+.step{display:none;} .step.active{display:block;} .q-title{font-size:20px;margin:0 0 10px;} .options{display:grid;gap:8px;} .opt{border:1px solid #e5e7eb;border-radius:10px;padding:10px;} .sel{border-color:#03c75a;background:#ecfdf3;font-weight:700;}
+.actions{margin-top:18px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;} .btn{border:1px solid #d1d5db;background:#fff;color:#374151;border-radius:8px;padding:10px 14px;font-weight:700;cursor:pointer;text-decoration:none;}
+.pager-input{width:70px;padding:8px;border:1px solid #d1d5db;border-radius:8px;text-align:center;}
+.right-actions{display:flex;gap:8px;}
+</style></head>
+<body><div class="container"><div th:replace="~{fragments/layout :: topLayout(${isAuthenticated})}"></div>
+<section class="card">
+  <h1 style="margin:0 0 8px; font-size:24px;" th:text="${summary.title}">강의</h1>
+  <div style="color:#6b7280; font-size:13px;">익명 만족도조사 읽기전용</div>
+
+  <div class="step active" data-step="1"><h2 class="q-title">1. 수업 목표와 내용이 일관되고 이해하기 쉬웠다.</h2><div class="options" data-name="q1"></div></div>
+  <div class="step" data-step="2"><h2 class="q-title">2. 설명 속도와 난이도가 적절했다.</h2><div class="options" data-name="q2"></div></div>
+  <div class="step" data-step="3"><h2 class="q-title">3. 예시/실습이 학습 이해에 도움이 되었다.</h2><div class="options" data-name="q3"></div></div>
+  <div class="step" data-step="4"><h2 class="q-title">4. 자료가 충실하고 유용했다.</h2><div class="options" data-name="q4"></div></div>
+  <div class="step" data-step="5"><h2 class="q-title">5. 수업 구성이 체계적이었다.</h2><div class="options" data-name="q5"></div></div>
+  <div class="step" data-step="6"><h2 class="q-title">6. 질문 피드백이 충분했다.</h2><div class="options" data-name="q6"></div></div>
+  <div class="step" data-step="7"><h2 class="q-title">7. 강사 전달력이 좋았다.</h2><div class="options" data-name="q7"></div></div>
+  <div class="step" data-step="8"><h2 class="q-title">8. 수업 준비가 철저했다.</h2><div class="options" data-name="q8"></div></div>
+  <div class="step" data-step="9"><h2 class="q-title">9. 수업 길이와 분량이 적절했다.</h2><div class="options" data-name="q9"></div></div>
+  <div class="step" data-step="10"><h2 class="q-title">10. 다른 사람에게 추천하고 싶다.</h2><div class="options" data-name="q10"></div></div>
+  <div class="step" data-step="11"><h2 class="q-title">11. 하고 싶은 말</h2><div class="opt" th:text="${survey.comment != null and !#strings.isEmpty(survey.comment) ? survey.comment : '의견 없음'}">의견</div><div style="margin-top:10px; font-weight:700;" th:text="'총 만족도 ' + ${#numbers.formatDecimal(survey.overallRating,1,1)} + '점'">총 만족도</div></div>
+
+  <div class="actions">
+    <div style="display:flex; justify-content:flex-start;"><button class="btn" type="button" id="prevBtn">이전</button></div>
+    <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+      <input class="pager-input" id="pageInput" type="number" min="1" max="11" value="1"/>
+      <button class="btn" type="button" id="goBtn">이동</button>
+    </div>
+    <div style="display:flex; justify-content:flex-end;"><button class="btn" type="button" id="nextBtn">다음</button></div>
+  </div>
+  <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+    <a class="btn" th:href="@{/business/satisfaction/{id}(id=${courseId})}">나가기</a>
+  </div>
+</section></div>
+<script th:inline="javascript">
+const vals = {
+ q1: /*[[${survey.q1}]]*/ null, q2: /*[[${survey.q2}]]*/ null, q3: /*[[${survey.q3}]]*/ null, q4: /*[[${survey.q4}]]*/ null, q5: /*[[${survey.q5}]]*/ null,
+ q6: /*[[${survey.q6}]]*/ null, q7: /*[[${survey.q7}]]*/ null, q8: /*[[${survey.q8}]]*/ null, q9: /*[[${survey.q9}]]*/ null, q10: /*[[${survey.q10}]]*/ null
+};
+const labels = [{v:5,t:'매우좋음'},{v:4,t:'좋음'},{v:3,t:'보통'},{v:2,t:'별로'},{v:1,t:'매우별로'}];
+document.querySelectorAll('.options').forEach(box=>{const k=box.dataset.name; labels.forEach(x=>{const d=document.createElement('div'); d.className='opt'+((vals[k]!==null && Math.round(vals[k])===x.v)?' sel':''); d.textContent=x.t; box.appendChild(d);});});
+const steps=[...document.querySelectorAll('.step')]; let cur=0; const pageInput=document.getElementById('pageInput');
+function show(i){cur=Math.max(0,Math.min(10,i)); steps.forEach((s,idx)=>s.classList.toggle('active',idx===cur)); pageInput.value=cur+1;}
+document.getElementById('prevBtn').onclick=()=>show(cur-1); document.getElementById('nextBtn').onclick=()=>show(cur+1); document.getElementById('goBtn').onclick=()=>show((parseInt(pageInput.value||'1',10)-1));
+show(0);
+</script></body></html>

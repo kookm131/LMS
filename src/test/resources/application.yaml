@@ -1,0 +1,7 @@
+spring:
+  # 메인 애플리케이션은 MySQL 중심으로 동작하므로,
+  # 테스트의 단순 contextLoads 에서는 DB 자동구성을 제외한다.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration

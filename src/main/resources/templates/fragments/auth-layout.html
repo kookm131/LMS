@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- 인증 페이지 공통 레이아웃 (중앙 정렬 + 상단 로고) -->
+<div th:fragment="authContainer(title)">
+    <a class="logo" th:href="@{/}">CodePilot</a>
+    <h1 th:text="${title}">인증</h1>
+</div>
+</body>
+</html>

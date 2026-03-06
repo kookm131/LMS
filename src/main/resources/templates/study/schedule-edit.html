@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>수강 스케줄 수정</title>
+    <style>
+        :root { --main:#03c75a; --line:#e5e7eb; --bg:#f9fafb; }
+        * { box-sizing:border-box; }
+        body { margin:0; font-family:"Noto Sans KR", Arial, sans-serif; background:var(--bg); color:#111827; }
+        .container { max-width:1100px; margin:0 auto; padding:20px; }
+
+        .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .logo { font-size:28px; font-weight:800; color:var(--main); text-decoration:none; }
+        .user-menu a { text-decoration:none; color:#374151; margin-left:14px; font-size:14px; }
+        .main-menu { display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+        .main-menu a { text-decoration:none; background:white; border:1px solid var(--line); padding:10px 16px; border-radius:999px; color:#111827; font-weight:600; font-size:14px; }
+        .search-area { background:white; border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:20px; }
+        .search-box { display:flex; border:2px solid var(--main); border-radius:999px; overflow:hidden; }
+        .search-box input { flex:1; border:none; padding:14px 18px; font-size:16px; outline:none; }
+        .search-box button { border:none; background:var(--main); color:white; padding:0 22px; font-weight:700; cursor:pointer; }
+
+        .card { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; }
+        h1 { margin:0; font-size:24px; }
+        .head { display:flex; justify-content:space-between; align-items:center; margin:0 0 10px; gap:8px; }
+
+        .top-categories { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+        .top-categories a {
+            text-decoration:none; border:1px solid var(--line); background:#fff; color:#374151;
+            padding:8px 12px; border-radius:999px; font-size:13px;
+        }
+        .top-categories a.active { background:#ecfdf3; color:#047857; border-color:#b9f5d0; font-weight:700; }
+
+        .row { border-bottom:1px solid #f1f5f9; padding:10px 0; display:grid; grid-template-columns:1fr 130px 120px; gap:10px; align-items:center; }
+        .row:last-child { border-bottom:none; }
+        .title { font-weight:700; }
+        .meta { color:#6b7280; font-size:13px; }
+        select { width:100%; border:1px solid #d1d5db; border-radius:8px; padding:8px; font-size:13px; background:#fff; }
+
+        .actions { margin-top:14px; display:flex; justify-content:flex-end; gap:8px; }
+        .btn { border:1px solid #d1d5db; background:#fff; color:#374151; padding:9px 14px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; text-decoration:none; }
+        .btn-primary { border-color:#03c75a; background:#03c75a; color:#fff; }
+
+        .pagination { margin-top:14px; display:flex; justify-content:center; gap:6px; flex-wrap:wrap; }
+        .pagination a, .pagination span { min-width:34px; text-align:center; padding:8px 10px; border:1px solid var(--line); border-radius:8px; text-decoration:none; color:#374151; background:#fff; font-size:13px; }
+        .pagination .active { background:var(--main); color:#fff; border-color:var(--main); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div th:replace="~{fragments/layout :: topLayout(${isAuthenticated})}"></div>
+
+    <section class="card">
+        <div class="head">
+            <h1>현재 수강 가능한 강의 내역</h1>
+            <a class="btn" th:href="@{/study/schedule}">취소</a>
+        </div>
+
+        <div class="top-categories">
+            <a th:href="@{/study/schedule/edit}" th:classappend="${selectedCategory == ''} ? 'active'">전체</a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/study/schedule/edit(category=${cat})}"
+               th:text="${cat}"
+               th:classappend="${selectedCategory == cat} ? 'active'">카테고리</a>
+        </div>
+
+        <form th:action="@{/study/schedule/save}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="row" th:each="e : ${enrollments}" th:with="sc=${scheduleMap == null ? null : scheduleMap[e.courseId]}">
+                <div>
+                    <div class="title" th:text="${e.title}">강의명</div>
+                    <div class="meta" th:text="${e.category} + ' · ' + ${e.instructorName}">카테고리 · 강사</div>
+                </div>
+
+                <div>
+                    <input type="hidden" name="courseId" th:value="${e.courseId}"/>
+                    <select name="dayOfWeek">
+                        <option>선택안함</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '월'}">월</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '화'}">화</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '수'}">수</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '목'}">목</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '금'}">금</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '토'}">토</option>
+                        <option th:selected="${sc != null and sc.dayOfWeek == '일'}">일</option>
+                    </select>
+                </div>
+
+                <div>
+                    <select name="alarmTime">
+                        <option th:each="t : ${alarmTimes}"
+                                th:value="${t}"
+                                th:text="${t}"
+                                th:selected="${sc != null and sc.alarmTime == t}">00:00</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="row" th:if="${#lists.isEmpty(enrollments)}">
+                <div class="meta">진행률 100% 미만 강의가 없습니다. (수료 강의는 수정 목록에서 제외됩니다)</div>
+                <div></div>
+                <div></div>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" type="submit">수정완료</button>
+            </div>
+        </form>
+
+        <div class="pagination">
+            <a th:if="${hasPrevGroup}" th:href="@{/study/schedule/edit(page=${prevGroupPage}, category=${selectedCategory})}">←</a>
+            <th:block th:each="p : ${#numbers.sequence(startPage, endPage)}">
+                <a th:if="${p != currentPage}" th:href="@{/study/schedule/edit(page=${p}, category=${selectedCategory})}" th:text="${p}">1</a>
+                <span th:if="${p == currentPage}" class="active" th:text="${p}">1</span>
+            </th:block>
+            <a th:if="${hasNextGroup}" th:href="@{/study/schedule/edit(page=${nextGroupPage}, category=${selectedCategory})}">→</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>
