@@ -37,6 +37,7 @@ public class StudyController {
     private final StudyQuestionRepository studyQuestionRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamAttemptRepository examAttemptRepository;
+    private final StudyAttendanceRepository studyAttendanceRepository;
 
     public StudyController(EnrollmentRepository enrollmentRepository,
                            CourseRepository courseRepository,
@@ -47,7 +48,8 @@ public class StudyController {
                            StudyCourseNoteRepository studyCourseNoteRepository,
                            StudyQuestionRepository studyQuestionRepository,
                            ExamQuestionRepository examQuestionRepository,
-                           ExamAttemptRepository examAttemptRepository) {
+                           ExamAttemptRepository examAttemptRepository,
+                           StudyAttendanceRepository studyAttendanceRepository) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.studyScheduleRepository = studyScheduleRepository;
@@ -58,6 +60,7 @@ public class StudyController {
         this.studyQuestionRepository = studyQuestionRepository;
         this.examQuestionRepository = examQuestionRepository;
         this.examAttemptRepository = examAttemptRepository;
+        this.studyAttendanceRepository = studyAttendanceRepository;
     }
 
     // 사용처: 목록/상세 조회 기능 (GetMapping /enrollments)
@@ -479,6 +482,14 @@ public class StudyController {
             return "redirect:/study/courses/" + courseId;
         }
 
+        if (!studyAttendanceRepository.canAccessLectureSequential(userId, courseId, lecture.get().orderNo())) {
+            return "redirect:/study/courses/" + courseId;
+        }
+
+        // 회차 진입 시: 해당 일자 출결을 우선 지각으로 기록 (이미 출석이면 유지)
+        studyAttendanceRepository.markLectureStarted(userId, courseId, lectureId);
+        studyAttendanceRepository.upsertDailyLate(userId, courseId, lectureId);
+
         String noteContent = studyNoteRepository.findNote(userId, courseId, lectureId)
                 .map(StudyNoteRepository.StudyNoteItem::noteContent)
                 .orElse("");
@@ -502,12 +513,30 @@ public class StudyController {
         Long userId = getCurrentUserId(authentication);
         if (userId == null) return "redirect:/login";
 
+        var outline = courseRepository.findOutline(courseId);
+        var lecture = outline.stream().filter(o -> o.lectureId().equals(lectureId)).findFirst();
+        if (lecture.isEmpty()) {
+            return "redirect:/study/courses/" + courseId;
+        }
+
+        if (!studyAttendanceRepository.canAccessLectureSequential(userId, courseId, lecture.get().orderNo())) {
+            return "redirect:/study/courses/" + courseId;
+        }
+
         String safeContent = noteContent == null ? "" : noteContent;
         if (safeContent.length() > 5000) {
             safeContent = safeContent.substring(0, 5000);
         }
 
         studyNoteRepository.save(userId, courseId, lectureId, safeContent);
+
+        // 동일 회차 중복 학습으로는 새 출석을 쌓지 않음(최초 완료만 인정)
+        boolean newlyCompleted = studyAttendanceRepository.markLectureCompletedIfFirstTime(userId, courseId, lectureId);
+        if (newlyCompleted) {
+            // 지각 기록이 있던 날에도 최초 완료가 생기면 출석으로 승격
+            studyAttendanceRepository.upsertDailyAttend(userId, courseId, lectureId);
+        }
+
         return "redirect:/study/courses/" + courseId + "/notes/" + lectureId + "?saved=true";
     }
 

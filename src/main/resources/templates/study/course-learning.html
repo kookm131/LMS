@@ -252,6 +252,7 @@
   <script th:inline="javascript">
     const userName = /*[[${chatUserName}]]*/ `학습자`;
     const ragText = /*[[${ragText}]]*/ `강의내용`;
+    let sessionTicket = '';
     const widget = document.getElementById('lmsChatWidget');
     const header = document.getElementById('lmsChatHeader');
     const body = document.getElementById('lmsChatBody');
@@ -315,6 +316,28 @@
       return d;
     }
 
+    async function ensureSessionTicket() {
+      if (sessionTicket) return sessionTicket;
+
+      const raw = (userName || '').toLowerCase();
+      let sid = raw.replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      if (!sid || sid.length < 3) {
+        sid = 'guest-' + Math.random().toString(36).slice(2, 10);
+      } else {
+        sid = 'user-' + sid.slice(0, 40);
+      }
+
+      const res = await fetch('/session-ticket/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sid })
+      });
+      const bodyRes = await res.json();
+      if (!res.ok || !bodyRes?.sessionTicket) throw new Error(bodyRes?.message || bodyRes?.error || '세션 발급 실패');
+      sessionTicket = bodyRes.sessionTicket;
+      return sessionTicket;
+    }
+
     async function sendChat() {
       const q = (input.value || '').trim();
       if (!q) return;
@@ -329,10 +352,11 @@
       }, 350);
 
       try {
+        const ticket = await ensureSessionTicket();
         const res = await fetch('/chat/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q, userName: userName || '학습자', ragContext: ragText || '강의내용' })
+          body: JSON.stringify({ question: q, userName: userName || '학습자', ragContext: ragText || '강의내용', sessionTicket: ticket })
         });
         const bodyRes = await res.json();
         if (!res.ok) throw new Error(bodyRes?.message || bodyRes?.error || '요청 실패');

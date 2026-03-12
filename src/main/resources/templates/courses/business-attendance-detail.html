@@ -38,7 +38,7 @@
 
         .empty { padding:14px; border:1px dashed #d1d5db; border-radius:10px; background:#f9fafb; color:#6b7280; font-size:14px; }
 
-        .detail-tools { margin-top:14px; display:flex; justify-content:flex-end; }
+        .detail-tools { margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
         .search-form { display:flex; gap:8px; align-items:center; }
         .search-form select, .search-form input {
             height:38px; border:1px solid #d1d5db; border-radius:10px; padding:0 10px; font-size:13px;
@@ -95,8 +95,14 @@
             </thead>
             <tbody>
             <tr th:each="r : ${rows}">
-                <td th:text="${r.studentName}">홍길동</td>
-                <td th:text="${r.studentUsername}">hong</td>
+                <td>
+                    <a th:href="@{/business/attendance/{id}(id=${course.id}, searchType='studentName', keyword=${r.studentName})}"
+                       th:text="${r.studentName}" style="color:inherit; text-decoration:none;">홍길동</a>
+                </td>
+                <td>
+                    <a th:href="@{/business/attendance/{id}(id=${course.id}, searchType='studentId', keyword=${r.studentUsername})}"
+                       th:text="${r.studentUsername}" style="color:inherit; text-decoration:none;">hong</a>
+                </td>
                 <td th:text="${#temporals.format(r.attendanceDate, 'yyyy-MM-dd')}">2026-03-12</td>
                 <td th:text="${#temporals.format(r.lastCheckedAt, 'yyyy-MM-dd HH:mm')}">2026-03-12 10:00</td>
                 <td th:text="${r.lastLectureTitle == null ? '-' : r.lastLectureTitle}">1강</td>
@@ -120,6 +126,7 @@
         </div>
 
         <div class="detail-tools">
+            <a class="list-btn" th:href="@{/business/attendance/{id}(id=${course.id})}">전체보기</a>
             <form class="search-form" method="get" th:action="@{/business/attendance/{id}(id=${course.id})}">
                 <select name="searchType">
                     <option value="studentId" th:selected="${searchType == 'studentId'}">아이디</option>

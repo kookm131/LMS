@@ -21,8 +21,6 @@
 
 # 수강신청 디테일
 ![alt text](images/image.png)
-# 수강신청 챗봇
-![alt text](images/image-1.png)
 # 잘린부분 
 ![alt text](images/image-7.png)
 
@@ -31,6 +29,9 @@
 
 # 사업자 수강등록
 ![alt text](images/image-13.png)
+
+# 챗봇
+![alt text](images/image.png)
 
 # 학습하기
 
@@ -58,6 +59,18 @@
 # 강의관리
 ![alt text](images/image-21.png)
 
+# 출결관리
+![alt text](images/image-1.png)
+# 출결관리 디테일
+![alt text](images/image-2.png)
+
+# 시험관리
+![alt text](images/image-3.png)
+# 시험관리 디테일
+![alt text](images/image-4.png)
+# 문제 추가/수정
+![alt text](images/image-5.png)
+
 # 만족도 관리
 ![alt text](images/image-22.png)
 # 만족도 관리 디테일
@@ -72,6 +85,8 @@
 # 수강스케줄 수정
 ![alt text](images/image-20.png)
 
+# 관리자 로그인 대시보드
+![alt text](images/image-6.png)
 
 # 커뮤니티
 
