@@ -28,13 +28,6 @@ public class BusinessAttendanceRepository {
             """;
 
     private static final String SELECT_BY_COURSE_OWNER_BASE_SQL = """
-            SELECT a.id,
-                   u.name AS student_name,
-                   u.username AS student_username,
-                   a.attendance_date,
-                   a.status,
-                   a.last_checked_at,
-                   l.title AS lecture_title
             FROM attendance_daily a
             JOIN courses c ON c.id = a.course_id
             JOIN users u ON u.id = a.student_id
@@ -53,17 +46,65 @@ public class BusinessAttendanceRepository {
         jdbcTemplate.execute(CREATE_TABLE_SQL);
     }
 
-    public List<AttendanceDetailItem> findByCourseOwner(Long courseId,
-                                                         String ownerUsername,
-                                                         String searchType,
-                                                         String keyword) {
+    public int countByCourseOwner(Long courseId,
+                                  String ownerUsername,
+                                  String searchType,
+                                  String keyword) {
         ensureTable();
 
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) ");
+        List<Object> params = new ArrayList<>();
+        appendBaseAndFilter(sql, params, courseId, ownerUsername, searchType, keyword);
+
+        Integer count = jdbcTemplate.queryForObject(sql.toString(), Integer.class, params.toArray());
+        return count == null ? 0 : count;
+    }
+
+    public List<AttendanceDetailItem> findPagedByCourseOwner(Long courseId,
+                                                              String ownerUsername,
+                                                              String searchType,
+                                                              String keyword,
+                                                              int limit,
+                                                              int offset) {
+        ensureTable();
+
+        StringBuilder sql = new StringBuilder("""
+                SELECT a.id,
+                       u.name AS student_name,
+                       u.username AS student_username,
+                       a.attendance_date,
+                       a.status,
+                       a.last_checked_at,
+                       l.title AS lecture_title
+                """);
+        List<Object> params = new ArrayList<>();
+        appendBaseAndFilter(sql, params, courseId, ownerUsername, searchType, keyword);
+
+        sql.append(" ORDER BY a.last_checked_at DESC, a.id DESC LIMIT ? OFFSET ? ");
+        params.add(limit);
+        params.add(offset);
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> new AttendanceDetailItem(
+                rs.getLong("id"),
+                rs.getString("student_name"),
+                rs.getString("student_username"),
+                rs.getDate("attendance_date").toLocalDate(),
+                rs.getString("status"),
+                rs.getTimestamp("last_checked_at").toLocalDateTime(),
+                rs.getString("lecture_title")
+        ), params.toArray());
+    }
+
+    private void appendBaseAndFilter(StringBuilder sql,
+                                     List<Object> params,
+                                     Long courseId,
+                                     String ownerUsername,
+                                     String searchType,
+                                     String keyword) {
         String normalizedKeyword = keyword == null ? "" : keyword.trim();
         String normalizedType = searchType == null ? "" : searchType.trim();
 
-        StringBuilder sql = new StringBuilder(SELECT_BY_COURSE_OWNER_BASE_SQL);
-        List<Object> params = new ArrayList<>();
+        sql.append(SELECT_BY_COURSE_OWNER_BASE_SQL);
         params.add(courseId);
         params.add(ownerUsername);
 
@@ -76,18 +117,6 @@ public class BusinessAttendanceRepository {
                 params.add(normalizedKeyword);
             }
         }
-
-        sql.append(" ORDER BY a.last_checked_at DESC, a.id DESC ");
-
-        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> new AttendanceDetailItem(
-                rs.getLong("id"),
-                rs.getString("student_name"),
-                rs.getString("student_username"),
-                rs.getDate("attendance_date").toLocalDate(),
-                rs.getString("status"),
-                rs.getTimestamp("last_checked_at").toLocalDateTime(),
-                rs.getString("lecture_title")
-        ), params.toArray());
     }
 
     public record AttendanceDetailItem(Long id,

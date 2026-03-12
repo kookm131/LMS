@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class BusinessAttendanceManageController {
 
     private static final int PAGE_SIZE = 10;
+    private static final int DETAIL_PAGE_SIZE = 20;
     private static final int PAGE_GROUP_SIZE = 5;
 
     private final CourseRepository courseRepository;
@@ -75,6 +76,7 @@ public class BusinessAttendanceManageController {
     public String attendanceDetail(@PathVariable Long courseId,
                                    @RequestParam(required = false, defaultValue = "studentId") String searchType,
                                    @RequestParam(required = false) String keyword,
+                                   @RequestParam(defaultValue = "1") int page,
                                    Authentication authentication,
                                    Model model) {
         if (!isBusinessUser(authentication)) {
@@ -87,13 +89,37 @@ public class BusinessAttendanceManageController {
             return "redirect:/business/attendance";
         }
 
-        var rows = businessAttendanceRepository.findByCourseOwner(courseId, instructorUsername, searchType, keyword);
+        int currentPage = Math.max(page, 1);
+        int offset = (currentPage - 1) * DETAIL_PAGE_SIZE;
+
+        int totalCount = businessAttendanceRepository.countByCourseOwner(courseId, instructorUsername, searchType, keyword);
+        int totalPages = (int) Math.ceil(totalCount / (double) DETAIL_PAGE_SIZE);
+        if (totalPages == 0) totalPages = 1;
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+            offset = (currentPage - 1) * DETAIL_PAGE_SIZE;
+        }
+
+        var rows = businessAttendanceRepository.findPagedByCourseOwner(
+                courseId, instructorUsername, searchType, keyword, DETAIL_PAGE_SIZE, offset
+        );
+
+        int groupIndex = (currentPage - 1) / PAGE_GROUP_SIZE;
+        int startPage = groupIndex * PAGE_GROUP_SIZE + 1;
+        int endPage = Math.min(startPage + PAGE_GROUP_SIZE - 1, totalPages);
 
         model.addAttribute("isAuthenticated", true);
         model.addAttribute("course", courseOpt.get());
         model.addAttribute("rows", rows);
         model.addAttribute("searchType", (searchType == null || searchType.isBlank()) ? "studentId" : searchType);
         model.addAttribute("keyword", keyword == null ? "" : keyword);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("hasPrevGroup", startPage > 1);
+        model.addAttribute("hasNextGroup", endPage < totalPages);
+        model.addAttribute("prevGroupPage", startPage - 1);
+        model.addAttribute("nextGroupPage", endPage + 1);
 
         return "courses/business-attendance-detail";
     }
