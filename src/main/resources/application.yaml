@@ -2,11 +2,11 @@ spring:
   application:
     name: LMS
   datasource:
-    # TODO: 로컬 MySQL 정보에 맞게 수정하세요.
-    # 현재 로컬 MySQL 서버 포트가 3308로 설정되어 있음 (/etc/mysql/mysql.conf.d/mysqld.cnf)
-    url: jdbc:mysql://localhost:3308/lms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: lms_user 
-    password: Mng3302@!
+    # 민감정보는 환경변수에서 주입
+    # 예: DB_URL, DB_USERNAME, DB_PASSWORD
+    url: ${DB_URL:jdbc:mysql://localhost:3308/lms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -29,15 +29,14 @@ spring:
       client:
         registration:
           google:
-            # 환경변수 우선 사용(없으면 기존 실험값 fallback)
-            client-id: ${GOOGLE_CLIENT_ID:254388932866-bet9qku4snifuvsmg3knl03akaohv4he.apps.googleusercontent.com}
-            client-secret: ${GOOGLE_CLIENT_SECRET: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}
+            client-id: ${GOOGLE_CLIENT_ID:}
+            client-secret: ${GOOGLE_CLIENT_SECRET:}
             scope:
               - profile
               - email
           naver:
-            client-id: ${NAVER_CLIENT_ID:_UmDg2D4pVHv_UMB_yul}
-            client-secret: ${NAVER_CLIENT_SECRET:9nV3SBb0bO}
+            client-id: ${NAVER_CLIENT_ID:}
+            client-secret: ${NAVER_CLIENT_SECRET:}
             client-name: Naver
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
