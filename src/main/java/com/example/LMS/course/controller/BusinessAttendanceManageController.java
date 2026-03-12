@@ -1,11 +1,13 @@
 package com.example.LMS.course.controller;
 
+import com.example.LMS.course.repository.BusinessAttendanceRepository;
 import com.example.LMS.course.repository.CourseRepository;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -17,25 +19,20 @@ public class BusinessAttendanceManageController {
     private static final int PAGE_GROUP_SIZE = 5;
 
     private final CourseRepository courseRepository;
+    private final BusinessAttendanceRepository businessAttendanceRepository;
 
-    public BusinessAttendanceManageController(CourseRepository courseRepository) {
+    public BusinessAttendanceManageController(CourseRepository courseRepository,
+                                              BusinessAttendanceRepository businessAttendanceRepository) {
         this.courseRepository = courseRepository;
+        this.businessAttendanceRepository = businessAttendanceRepository;
     }
 
     @GetMapping
-    public String attendanceManage(@RequestParam(required = false) Long courseId,
-                                   @RequestParam(defaultValue = "1") int page,
+    public String attendanceManage(@RequestParam(defaultValue = "1") int page,
                                    @RequestParam(required = false) String category,
                                    Authentication authentication,
                                    Model model) {
-        boolean isAuthenticated = authentication != null
-                && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken);
-
-        boolean isBusinessUser = isAuthenticated && authentication.getAuthorities().stream()
-                .anyMatch(a -> "ROLE_INSTRUCTOR".equals(a.getAuthority()));
-
-        if (!isBusinessUser) {
+        if (!isBusinessUser(authentication)) {
             return "redirect:/enrollments";
         }
 
@@ -63,7 +60,6 @@ public class BusinessAttendanceManageController {
         model.addAttribute("courses", courses);
         model.addAttribute("categories", categories);
         model.addAttribute("selectedCategory", category == null ? "" : category);
-        model.addAttribute("selectedCourseId", courseId);
         model.addAttribute("currentPage", currentPage);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
@@ -73,5 +69,37 @@ public class BusinessAttendanceManageController {
         model.addAttribute("nextGroupPage", endPage + 1);
 
         return "courses/business-attendance-manage";
+    }
+
+    @GetMapping("/{courseId}")
+    public String attendanceDetail(@PathVariable Long courseId,
+                                   Authentication authentication,
+                                   Model model) {
+        if (!isBusinessUser(authentication)) {
+            return "redirect:/enrollments";
+        }
+
+        String instructorUsername = authentication.getName();
+        var courseOpt = courseRepository.findInstructorCourseById(instructorUsername, courseId);
+        if (courseOpt.isEmpty()) {
+            return "redirect:/business/attendance";
+        }
+
+        var rows = businessAttendanceRepository.findByCourseOwner(courseId, instructorUsername);
+
+        model.addAttribute("isAuthenticated", true);
+        model.addAttribute("course", courseOpt.get());
+        model.addAttribute("rows", rows);
+
+        return "courses/business-attendance-detail";
+    }
+
+    private boolean isBusinessUser(Authentication authentication) {
+        boolean isAuthenticated = authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
+
+        return isAuthenticated && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_INSTRUCTOR".equals(a.getAuthority()));
     }
 }

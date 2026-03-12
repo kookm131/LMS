@@ -60,21 +60,19 @@
 
     <section class="card">
         <h1>출결관리</h1>
-        <p class="desc">강의관리와 동일한 형태로 목록에서 강의를 바로 선택할 수 있습니다.</p>
 
         <div class="top-categories">
-            <a th:href="@{/business/attendance(courseId=${selectedCourseId})}" th:classappend="${selectedCategory == ''} ? 'active'">전체</a>
+            <a th:href="@{/business/attendance}" th:classappend="${selectedCategory == ''} ? 'active'">전체</a>
             <a th:each="cat : ${categories}"
-               th:href="@{/business/attendance(category=${cat}, courseId=${selectedCourseId})}"
+               th:href="@{/business/attendance(category=${cat})}"
                th:text="${cat}"
                th:classappend="${selectedCategory == cat} ? 'active'">카테고리</a>
         </div>
 
-        <div class="item" th:each="c : ${courses}"
-             th:style="${selectedCourseId != null and selectedCourseId == c.id} ? 'background:#f0fdf4; border-radius:10px; padding:12px;' : ''">
+        <div class="item" th:each="c : ${courses}">
             <div>
                 <p class="title">
-                    <a th:href="@{/business/attendance(courseId=${c.id}, category=${selectedCategory}, page=${currentPage})}"
+                    <a th:href="@{/business/attendance/{id}(id=${c.id})}"
                        th:text="${c.title}" style="text-decoration:none; color:inherit;">강의명</a>
                 </p>
                 <div class="meta" th:text="${c.category} + ' · ' + ${c.instructorName}">카테고리 · 강사</div>
@@ -89,14 +87,14 @@
         </div>
 
         <div class="pagination">
-            <a th:if="${hasPrevGroup}" th:href="@{/business/attendance(page=${prevGroupPage}, category=${selectedCategory}, courseId=${selectedCourseId})}">←</a>
+            <a th:if="${hasPrevGroup}" th:href="@{/business/attendance(page=${prevGroupPage}, category=${selectedCategory})}">←</a>
 
             <th:block th:each="p : ${#numbers.sequence(startPage, endPage)}">
-                <a th:if="${p != currentPage}" th:href="@{/business/attendance(page=${p}, category=${selectedCategory}, courseId=${selectedCourseId})}" th:text="${p}">1</a>
+                <a th:if="${p != currentPage}" th:href="@{/business/attendance(page=${p}, category=${selectedCategory})}" th:text="${p}">1</a>
                 <span th:if="${p == currentPage}" class="active" th:text="${p}">1</span>
             </th:block>
 
-            <a th:if="${hasNextGroup}" th:href="@{/business/attendance(page=${nextGroupPage}, category=${selectedCategory}, courseId=${selectedCourseId})}">→</a>
+            <a th:if="${hasNextGroup}" th:href="@{/business/attendance(page=${nextGroupPage}, category=${selectedCategory})}">→</a>
         </div>
     </section>
 </div>
