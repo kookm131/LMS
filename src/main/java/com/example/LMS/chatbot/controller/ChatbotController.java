@@ -27,8 +27,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -301,20 +304,34 @@ public class ChatbotController {
                 && !(authentication instanceof AnonymousAuthenticationToken);
 
         if (isAuthenticated) {
-            String raw = authentication.getName() == null ? "" : authentication.getName().toLowerCase();
-            String normalized = raw.replaceAll("[^a-z0-9-]", "-").replaceAll("-+", "-");
+            String raw = authentication.getName() == null ? "" : authentication.getName();
+            String normalized = raw.toLowerCase().replaceAll("[^a-z0-9-]", "-").replaceAll("-+", "-");
             normalized = normalized.replaceAll("^-|-$", "");
+
+            // 한글/특수문자 아이디는 정규화 시 충돌할 수 있으므로 해시 접미사로 유니크 보장
+            String digest6 = sha256Hex(raw).substring(0, 6);
+
             if (normalized.length() < 3) {
                 normalized = "user";
             }
-            if (normalized.length() > 50) {
-                normalized = normalized.substring(0, 50);
+            if (normalized.length() > 40) {
+                normalized = normalized.substring(0, 40);
             }
-            return "user-" + normalized;
+            return "user-" + normalized + "-" + digest6;
         }
 
         String random = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
         return "guest-" + random;
+    }
+
+    private String sha256Hex(String value) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest((value == null ? "" : value).getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (Exception e) {
+            return "000000";
+        }
     }
 
     private void sendEvent(SseEmitter emitter, String eventName, String data) {
