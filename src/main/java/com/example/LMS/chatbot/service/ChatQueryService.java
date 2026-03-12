@@ -146,14 +146,16 @@ public class ChatQueryService {
     }
 
     private String toSessionKeyOrNull(String sessionId) {
+        // 항상 tutor 네임스페이스 세션키를 강제해서
+        // gateway 기본 세션키(환경변수)나 과거 openai 네임스페이스로 새 요청이 섞이지 않게 함
         if (sessionId == null || sessionId.isBlank()) {
-            return null;
+            return "agent:chatbot:tutor:session:anonymous";
         }
         return toSessionKey(sessionId);
     }
 
     private String toSessionKey(String sessionId) {
-        String safeSessionId = sessionId.replaceAll("[^a-z0-9-]", "-");
+        String safeSessionId = sessionId.toLowerCase().replaceAll("[^a-z0-9-]", "-");
         return "agent:chatbot:tutor:session:" + safeSessionId;
     }
 }

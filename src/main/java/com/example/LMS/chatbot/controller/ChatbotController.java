@@ -157,10 +157,14 @@ public class ChatbotController {
         if (effectiveSessionTicket != null && !effectiveSessionTicket.isBlank()) {
             sessionId = authTokenService.extractSessionIdFromAccess(effectiveSessionTicket);
         }
+        String resolvedSessionKey = (sessionId == null || sessionId.isBlank())
+                ? "agent:chatbot:tutor:session:anonymous"
+                : ("agent:chatbot:tutor:session:" + sessionId.toLowerCase().replaceAll("[^a-z0-9-]", "-"));
+
         return ResponseEntity.ok(Map.of(
                 "agentId", gatewayClient.getGatewayAgentId(),
                 "sessionId", sessionId == null ? "(token 없음)" : sessionId,
-                "sessionKey", sessionId == null ? "(token 없음)" : ("agent:chatbot:tutor:session:" + sessionId.replaceAll("[^a-z0-9-]", "-"))
+                "sessionKey", resolvedSessionKey
         ));
     }
 
