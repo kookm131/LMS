@@ -18,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +30,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Controller
@@ -86,19 +89,27 @@ public class ChatbotController {
     public String chat(
             @RequestParam(value = "sessionTicket", required = false) String sessionTicket,
             HttpServletResponse response,
-            Model model
+            Model model,
+            Authentication authentication
     ) {
         String effectiveSessionTicket = sessionTicket;
         if ((effectiveSessionTicket == null || effectiveSessionTicket.isBlank()) && devAutoTokenEnabled) {
             long now = Instant.now().getEpochSecond();
             long accessExp = now + devTokenTtlSeconds;
             long refreshExp = now + refreshTokenTtlSeconds;
-            effectiveSessionTicket = authTokenService.createAccessToken(devUserId, accessExp);
-            String refreshToken = authTokenService.createRefreshToken(devUserId, refreshExp);
+
+            String sid = resolveAutoSessionId(authentication);
+            effectiveSessionTicket = authTokenService.createAccessToken(sid, accessExp);
+            String refreshToken = authTokenService.createRefreshToken(sid, refreshExp);
             response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(refreshToken).toString());
         }
-        String sessionId = authTokenService.extractSessionIdFromAccess(effectiveSessionTicket);
-        model.addAttribute("userId", sessionId);
+
+        String sessionId = null;
+        if (effectiveSessionTicket != null && !effectiveSessionTicket.isBlank()) {
+            sessionId = authTokenService.extractSessionIdFromAccess(effectiveSessionTicket);
+        }
+
+        model.addAttribute("userId", sessionId == null ? "" : sessionId);
         model.addAttribute("sessionTicket", effectiveSessionTicket);
         return "chat";
     }
@@ -282,6 +293,28 @@ public class ChatbotController {
         if (apiKey == null || !issueApiKey.equals(apiKey)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 API KEY입니다.");
         }
+    }
+
+    private String resolveAutoSessionId(Authentication authentication) {
+        boolean isAuthenticated = authentication != null
+                && authentication.isAuthenticated()
+                && !(authentication instanceof AnonymousAuthenticationToken);
+
+        if (isAuthenticated) {
+            String raw = authentication.getName() == null ? "" : authentication.getName().toLowerCase();
+            String normalized = raw.replaceAll("[^a-z0-9-]", "-").replaceAll("-+", "-");
+            normalized = normalized.replaceAll("^-|-$", "");
+            if (normalized.length() < 3) {
+                normalized = "user";
+            }
+            if (normalized.length() > 50) {
+                normalized = normalized.substring(0, 50);
+            }
+            return "user-" + normalized;
+        }
+
+        String random = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
+        return "guest-" + random;
     }
 
     private void sendEvent(SseEmitter emitter, String eventName, String data) {
