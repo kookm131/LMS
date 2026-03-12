@@ -237,6 +237,13 @@ public class CourseRepository {
             LIMIT 1
             """;
 
+    private static final String SELECT_ALL_BY_INSTRUCTOR_SQL = """
+            SELECT id, title
+            FROM courses
+            WHERE status = 'PUBLISHED' AND created_by_username = ?
+            ORDER BY created_at DESC, id DESC
+            """;
+
     private final JdbcTemplate jdbcTemplate;
 
     public CourseRepository(JdbcTemplate jdbcTemplate) {
@@ -496,6 +503,13 @@ public class CourseRepository {
         return list.stream().findFirst();
     }
 
+    public List<CourseOptionItem> findAllByInstructor(String instructorName) {
+        return jdbcTemplate.query(SELECT_ALL_BY_INSTRUCTOR_SQL, (rs, rowNum) -> new CourseOptionItem(
+                rs.getLong("id"),
+                rs.getString("title")
+        ), instructorName);
+    }
+
     public List<CourseCatalogItem> findRelated(String category, Long excludeCourseId, int limit) {
         return jdbcTemplate.query(SELECT_RELATED_SQL, (rs, rowNum) -> new CourseCatalogItem(
                 rs.getLong("id"),
@@ -531,5 +545,7 @@ public class CourseRepository {
 
     public record BusinessSatisfactionItem(Long courseId, String title, String category, String instructorName,
                                            int purchaseCount, double avgRating, java.time.LocalDateTime lastSurveyAt) {}
+
+    public record CourseOptionItem(Long id, String title) {}
 }
 
