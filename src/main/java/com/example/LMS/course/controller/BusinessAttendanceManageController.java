@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequestMapping("/business/attendance")
 public class BusinessAttendanceManageController {
 
+    private static final int PAGE_SIZE = 10;
+    private static final int PAGE_GROUP_SIZE = 5;
+
     private final CourseRepository courseRepository;
 
     public BusinessAttendanceManageController(CourseRepository courseRepository) {
@@ -21,6 +24,8 @@ public class BusinessAttendanceManageController {
 
     @GetMapping
     public String attendanceManage(@RequestParam(required = false) Long courseId,
+                                   @RequestParam(defaultValue = "1") int page,
+                                   @RequestParam(required = false) String category,
                                    Authentication authentication,
                                    Model model) {
         boolean isAuthenticated = authentication != null
@@ -35,11 +40,39 @@ public class BusinessAttendanceManageController {
         }
 
         String instructorUsername = authentication.getName();
+
+        int currentPage = Math.max(page, 1);
+        int offset = (currentPage - 1) * PAGE_SIZE;
+
+        int totalCount = courseRepository.countPagedByInstructor(instructorUsername, category);
+        int totalPages = (int) Math.ceil(totalCount / (double) PAGE_SIZE);
+        if (totalPages == 0) totalPages = 1;
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+            offset = (currentPage - 1) * PAGE_SIZE;
+        }
+
+        var courses = courseRepository.findPagedByInstructor(instructorUsername, PAGE_SIZE, offset, category);
+        var categories = courseRepository.findCategoriesByInstructor(instructorUsername);
         var myCourses = courseRepository.findAllByInstructor(instructorUsername);
+
+        int groupIndex = (currentPage - 1) / PAGE_GROUP_SIZE;
+        int startPage = groupIndex * PAGE_GROUP_SIZE + 1;
+        int endPage = Math.min(startPage + PAGE_GROUP_SIZE - 1, totalPages);
 
         model.addAttribute("isAuthenticated", true);
         model.addAttribute("myCourses", myCourses);
+        model.addAttribute("courses", courses);
+        model.addAttribute("categories", categories);
+        model.addAttribute("selectedCategory", category == null ? "" : category);
         model.addAttribute("selectedCourseId", courseId);
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
+        model.addAttribute("hasPrevGroup", startPage > 1);
+        model.addAttribute("hasNextGroup", endPage < totalPages);
+        model.addAttribute("prevGroupPage", startPage - 1);
+        model.addAttribute("nextGroupPage", endPage + 1);
 
         return "courses/business-attendance-manage";
     }
