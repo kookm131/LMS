@@ -5,6 +5,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -26,7 +27,7 @@ public class BusinessAttendanceRepository {
             )
             """;
 
-    private static final String SELECT_BY_COURSE_OWNER_SQL = """
+    private static final String SELECT_BY_COURSE_OWNER_BASE_SQL = """
             SELECT a.id,
                    u.name AS student_name,
                    u.username AS student_username,
@@ -40,7 +41,6 @@ public class BusinessAttendanceRepository {
             LEFT JOIN lectures l ON l.id = a.last_lecture_id
             WHERE a.course_id = ?
               AND c.created_by_username = ?
-            ORDER BY a.last_checked_at DESC, a.id DESC
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -53,9 +53,33 @@ public class BusinessAttendanceRepository {
         jdbcTemplate.execute(CREATE_TABLE_SQL);
     }
 
-    public List<AttendanceDetailItem> findByCourseOwner(Long courseId, String ownerUsername) {
+    public List<AttendanceDetailItem> findByCourseOwner(Long courseId,
+                                                         String ownerUsername,
+                                                         String searchType,
+                                                         String keyword) {
         ensureTable();
-        return jdbcTemplate.query(SELECT_BY_COURSE_OWNER_SQL, (rs, rowNum) -> new AttendanceDetailItem(
+
+        String normalizedKeyword = keyword == null ? "" : keyword.trim();
+        String normalizedType = searchType == null ? "" : searchType.trim();
+
+        StringBuilder sql = new StringBuilder(SELECT_BY_COURSE_OWNER_BASE_SQL);
+        List<Object> params = new ArrayList<>();
+        params.add(courseId);
+        params.add(ownerUsername);
+
+        if (!normalizedKeyword.isEmpty()) {
+            if ("studentName".equals(normalizedType)) {
+                sql.append(" AND u.name LIKE CONCAT('%', ?, '%') ");
+                params.add(normalizedKeyword);
+            } else {
+                sql.append(" AND u.username LIKE CONCAT('%', ?, '%') ");
+                params.add(normalizedKeyword);
+            }
+        }
+
+        sql.append(" ORDER BY a.last_checked_at DESC, a.id DESC ");
+
+        return jdbcTemplate.query(sql.toString(), (rs, rowNum) -> new AttendanceDetailItem(
                 rs.getLong("id"),
                 rs.getString("student_name"),
                 rs.getString("student_username"),
@@ -63,7 +87,7 @@ public class BusinessAttendanceRepository {
                 rs.getString("status"),
                 rs.getTimestamp("last_checked_at").toLocalDateTime(),
                 rs.getString("lecture_title")
-        ), courseId, ownerUsername);
+        ), params.toArray());
     }
 
     public record AttendanceDetailItem(Long id,

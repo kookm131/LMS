@@ -73,6 +73,8 @@ public class BusinessAttendanceManageController {
 
     @GetMapping("/{courseId}")
     public String attendanceDetail(@PathVariable Long courseId,
+                                   @RequestParam(required = false, defaultValue = "studentId") String searchType,
+                                   @RequestParam(required = false) String keyword,
                                    Authentication authentication,
                                    Model model) {
         if (!isBusinessUser(authentication)) {
@@ -85,11 +87,13 @@ public class BusinessAttendanceManageController {
             return "redirect:/business/attendance";
         }
 
-        var rows = businessAttendanceRepository.findByCourseOwner(courseId, instructorUsername);
+        var rows = businessAttendanceRepository.findByCourseOwner(courseId, instructorUsername, searchType, keyword);
 
         model.addAttribute("isAuthenticated", true);
         model.addAttribute("course", courseOpt.get());
         model.addAttribute("rows", rows);
+        model.addAttribute("searchType", (searchType == null || searchType.isBlank()) ? "studentId" : searchType);
+        model.addAttribute("keyword", keyword == null ? "" : keyword);
 
         return "courses/business-attendance-detail";
     }
