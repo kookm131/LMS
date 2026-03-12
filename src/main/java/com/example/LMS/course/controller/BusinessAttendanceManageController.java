@@ -54,14 +54,12 @@ public class BusinessAttendanceManageController {
 
         var courses = courseRepository.findPagedByInstructor(instructorUsername, PAGE_SIZE, offset, category);
         var categories = courseRepository.findCategoriesByInstructor(instructorUsername);
-        var myCourses = courseRepository.findAllByInstructor(instructorUsername);
 
         int groupIndex = (currentPage - 1) / PAGE_GROUP_SIZE;
         int startPage = groupIndex * PAGE_GROUP_SIZE + 1;
         int endPage = Math.min(startPage + PAGE_GROUP_SIZE - 1, totalPages);
 
         model.addAttribute("isAuthenticated", true);
-        model.addAttribute("myCourses", myCourses);
         model.addAttribute("courses", courses);
         model.addAttribute("categories", categories);
         model.addAttribute("selectedCategory", category == null ? "" : category);
