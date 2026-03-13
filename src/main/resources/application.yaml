@@ -5,7 +5,7 @@ spring:
     # 민감정보는 환경변수에서 주입
     # 예: DB_URL, DB_USERNAME, DB_PASSWORD
     url: ${DB_URL:jdbc:mysql://localhost:3308/lms?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
-    username: ${DB_USERNAME:}
+    username: ${DB_USERNAME:lms_user}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
@@ -29,14 +29,14 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT_ID:}
-            client-secret: ${GOOGLE_CLIENT_SECRET:}
+            client-id: ${GOOGLE_CLIENT_ID:dummy-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-google-client-secret}
             scope:
               - profile
               - email
           naver:
-            client-id: ${NAVER_CLIENT_ID:}
-            client-secret: ${NAVER_CLIENT_SECRET:}
+            client-id: ${NAVER_CLIENT_ID:dummy-naver-client-id}
+            client-secret: ${NAVER_CLIENT_SECRET:dummy-naver-client-secret}
             client-name: Naver
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
