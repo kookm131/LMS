@@ -37,3 +37,8 @@ out/
 .vscode/
 logs/
 hs_err_pid*.log
+
+# local secrets / developer-only overrides
+src/main/resources/application-local.yaml
+.env
+.env.*

@@ -180,6 +180,11 @@ source ~/.bashrc
 ./gradlew bootRun
 ```
 
+로컬 민감정보(`application-local.yaml`)를 사용할 때:
+```bash
+./gradlew bootRun --args='--spring.profiles.active=local'
+```
+
 ### 5. 접속
 - 앱: `http://localhost:8080`
 - 관리자 대시보드: `http://localhost:8080/admin/dashboard`
